@@ -40,6 +40,7 @@ wss.on('connection', (ws) => {
 
 
 app.post('/webhook', (req, res) => {
+  console.log('📨 Event received:', req.body);
   const event = Array.isArray(req.body) ? req.body[0] : req.body;
 
   if (event.eventType === 'Microsoft.EventGrid.SubscriptionValidationEvent') {
