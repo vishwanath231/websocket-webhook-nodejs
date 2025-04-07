@@ -25,18 +25,43 @@ wss.on('connection', (ws) => {
 });
 
 
+// app.post('/webhook', (req, res) => {
+//     console.log('📨 Event received:', req.body);
+
+//     // Broadcast to all WebSocket clients
+//     for (const client of clients) {
+//         if (client.readyState === client.OPEN) {
+//         client.send(JSON.stringify(req.body));
+//         }
+//     }
+
+//     res.sendStatus(200);
+// });
+
+
 app.post('/webhook', (req, res) => {
-    console.log('📨 Event received:', req.body);
+  const event = Array.isArray(req.body) ? req.body[0] : req.body;
 
-    // Broadcast to all WebSocket clients
-    for (const client of clients) {
-        if (client.readyState === client.OPEN) {
-        client.send(JSON.stringify(req.body));
-        }
+  if (event.eventType === 'Microsoft.EventGrid.SubscriptionValidationEvent') {
+    console.log('🔐 Validating subscription...');
+    return res.status(200).json({ validationResponse: event.data.validationCode });
+  }
+
+  console.log('📨 Event received:', event);
+
+  // Notify clients
+  for (const client of clients) {
+    if (client.readyState === client.OPEN) {
+      client.send(JSON.stringify({
+        type: 'BlobCreated',
+        data: event.data
+      }));
     }
+  }
 
-    res.sendStatus(200);
+  res.sendStatus(200);
 });
+
 
 
 const port = process.env.PORT || 5000;
